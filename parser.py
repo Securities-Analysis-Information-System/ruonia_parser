@@ -148,13 +148,16 @@ lastMonth = months[len(months) - 1]
 
 year = startYear
 count = 0
+countPercentile25 = 0
 total_ruonia = 0
+total_ruonia_percentile25 = 0
 countBad = 0
 previousMonth = 11
 already = False
 
 data = []
 avg_data = []
+data_percentile_25 = []
 for month in months:
     monthStr = month
     if month < 10:
@@ -199,12 +202,15 @@ for month in months:
     date_list.reverse()
 
     dateColumn = 1
-    ruoniaColumn = 2
+    ruoniaCommonColumn = 2
+    ruoniaPercentileTwentyFiveColumn = 7
     row = 2
     tupler = []
     tupler_avg = []
+    tupler_ruonia_percentile_25 = []
     for expected_date in date_list:
-        ruonia: float = sheet.cell(row=row, column=ruoniaColumn).value
+        ruoniaCommon: float = sheet.cell(row=row, column=ruoniaCommonColumn).value
+        ruoniaPercentileTwentyFive: float = sheet.cell(row=row, column=ruoniaPercentileTwentyFiveColumn).value
         date: datetime = sheet.cell(row=row, column=dateColumn).value
         formattedDate = date
         if date != None:
@@ -215,13 +221,18 @@ for month in months:
         else:
             count = count + 1
 
-            ruonia = ruonia
-            total_ruonia = total_ruonia + ruonia
+            total_ruonia = total_ruonia + ruoniaCommon
+            if ruoniaPercentileTwentyFive is not None:
+                countPercentile25 = countPercentile25 + 1
+            if ruoniaPercentileTwentyFive is None:
+                ruoniaPercentileTwentyFive = 0
+            total_ruonia_percentile25 = total_ruonia_percentile25 + ruoniaPercentileTwentyFive
 
-            print(f'{formattedDate}: {ruonia} / {expected_date}')
+            print(f'{formattedDate}: {ruoniaCommon} -- {ruoniaPercentileTwentyFive} / {expected_date}')
 
             # if count % 2 == 0:
-            tupler.append((formattedDate, ruonia))
+            tupler.append((formattedDate, ruoniaCommon))
+            tupler_ruonia_percentile_25.append((formattedDate, ruoniaPercentileTwentyFive))
             tupler_avg.append((formattedDate, 0))
             # else:
             #     data.append(('', ruonia))
@@ -230,16 +241,20 @@ for month in months:
 
     tupler.reverse()
     tupler_avg.reverse()
+    tupler_ruonia_percentile_25.reverse()
     for item in tupler:
         data.append(item)
 
     for item in tupler_avg:
         avg_data.append(item)
 
-avg_ruonia = total_ruonia / count + bonus
+    for item in tupler_ruonia_percentile_25:
+        data_percentile_25.append(item)
+
+avg_ruonia = ((total_ruonia / count) + (total_ruonia_percentile25 / countPercentile25)) / 2 + bonus
 
 print()
-print(total_ruonia, count, avg_ruonia)
+print(total_ruonia, total_ruonia_percentile25, count, countPercentile25, avg_ruonia)
 
 new_avg_data = []
 for item in avg_data:
@@ -249,4 +264,4 @@ for item in avg_data:
 avg_data = new_avg_data
 
 if is_need_visulize:
-    visualize_ruonia([data, avg_data], count)
+    visualize_ruonia([data, avg_data, data_percentile_25], count)

@@ -9,7 +9,7 @@ def visualize_ruonia(data, count):
     plt.grid()
     plt.xticks(rotation=90)
 
-    colors = [(0,0,1), (1,0,0)]
+    colors = [(0,0,1), (1,0,0), (0,1,0)]
     for idx, dataItem in enumerate(data):
         plt.plot(*zip(*dataItem), color=colors[idx])
 
